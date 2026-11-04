@@ -1,0 +1,33 @@
+:root {
+  /* Main brand colour: dark, desaturated green. Change the hue here and everything follows. */
+  --hue-primary: 150;
+  --primary: hsl(var(--hue-primary) 28% 24%);
+  --primary-soft: hsl(var(--hue-primary) 30% 80%);
+  --weekend-soft: hsl(var(--hue-primary) 22% 91%);
+  --font-opposite-color: #fff;
+
+  /* User days: the same colour with the hue rotated by 60 degrees. */
+  --hue-user: calc(var(--hue-primary) - 120);
+  --user: hsl(var(--hue-user) 28% 24%);
+  --user-soft: hsl(var(--hue-user) 40% 80%);
+
+  --bg: hsl(var(--hue-primary) 18% 96%);
+  --text: #1d2b25;
+  --muted: #8b958f;
+  --border: #dbe2de;
+  --danger: #b3261e;
+}
+
+* { box-sizing: border-box; }
+
+::selection {
+  background: var(--primary);
+  color: var(--font-opposite-color);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
