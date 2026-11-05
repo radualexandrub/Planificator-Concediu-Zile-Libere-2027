@@ -70,9 +70,10 @@
   </div>
 
   <h2>Calendar {{ year }}</h2>
-  <nav class="months-nav" aria-label="Salt la lună">
+  <nav class="months-nav" aria-label="Alege luna">
     @for (m of months(); track m.index) {
-      <button type="button" (click)="goTo(m.index)">{{ m.name }}</button>
+      <button type="button" [class.active]="m.index === viewMonth()" [attr.aria-pressed]="m.index === viewMonth()"
+              [title]="m.work + ' zile lucrătoare din ' + m.daysInMonth" (click)="selectMonth(m.index)">{{ m.name }}</button>
     }
   </nav>
 
@@ -82,39 +83,44 @@
     <span><i class="swatch user"></i> Concediul meu</span>
   </div>
 
-  <div class="calendar">
-    @for (m of months(); track m.index) {
-      <section class="month" [id]="'month-' + m.index">
-        <h3>{{ m.name }} {{ year }}</h3>
-        <table class="cal">
-          <thead><tr>@for (w of weekdayHeaders; track w) { <th>{{ w }}</th> }</tr></thead>
-          <tbody>
-            @for (week of m.weeks; track $index) {
-              <tr>
-                @for (c of week; track $index) {
-                  @if (c) {
-                    <td [class.weekend]="c.weekend" [class.state]="!!c.state" [class.user]="c.user" [title]="c.state ?? (c.user ? 'Concediu' : '')">
-                      <span class="n">{{ c.day }}</span>
-                      @if (c.state) { <small>{{ c.state }}</small> }
-                      @else if (c.user) { <small>Concediu</small> }
-                    </td>
-                  } @else {
-                    <td class="empty"></td>
-                  }
-                }
-              </tr>
-            }
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="7">
-                Zile lucrătoare: <strong>{{ m.work }}</strong> din {{ m.daysInMonth }}
-                @if (m.vacation) { <span class="after">(<strong>{{ m.work - m.vacation }}</strong> după concediu)</span> }
+  <section class="month">
+    <div class="month-head">
+      <button type="button" class="step" (click)="step(-1)" [disabled]="viewMonth() === 0" aria-label="Luna anterioară">‹</button>
+      <h3>{{ current().name }} {{ year }}</h3>
+      <button type="button" class="step" (click)="step(1)" [disabled]="viewMonth() === 11" aria-label="Luna următoare">›</button>
+    </div>
+    <table class="cal">
+      <thead>
+        <tr>
+          @for (w of weekdayHeaders; track w.long) {
+            <th><span class="long">{{ w.long }}</span><span class="short">{{ w.short }}</span></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (week of weeks(); track $index) {
+          <tr>
+            @for (c of week; track c.iso) {
+              <td [class.weekend]="c.weekend" [class.state]="!!c.state" [class.user]="c.user"
+                  [class.odd]="c.odd" [class.out]="!c.inYear" [title]="c.state ?? (c.user ? 'Concediu' : '')">
+                <span class="n">{{ c.day }}</span>
+                @if (c.state) { <small>{{ c.state }}</small> }
+                @else if (c.user) { <small>Concediu</small> }
+                @if (c.first) { <small class="edge">început {{ c.monthShort }}</small> }
+                @if (c.last) { <small class="edge">sfârșit {{ c.monthShort }}</small> }
               </td>
-            </tr>
-          </tfoot>
-        </table>
-      </section>
-    }
-  </div>
+            }
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="7">
+            Zile lucrătoare în {{ current().name }}: <strong>{{ current().work }}</strong> din {{ current().daysInMonth }}
+            @if (current().vacation) { <span class="after">(<strong>{{ current().work - current().vacation }}</strong> după concediu)</span> }
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
 </main>

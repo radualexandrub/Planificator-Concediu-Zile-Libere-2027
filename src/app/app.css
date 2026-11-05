@@ -21,7 +21,7 @@
   padding: 0.6rem 1rem;
 }
 .balance-inner {
-  max-width: calc(1200px - 2rem);
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -47,10 +47,7 @@
 .page {
   max-width: 1200px;
   margin: 0 auto;
-  padding-top: 1rem;
-  padding-right: 1rem;
-  padding-bottom: 3rem;
-  padding-left: 1rem;
+  padding: 1.25rem 1rem 3rem;
 }
 h1 {
   margin: 0.25rem 0 0.25rem;
@@ -197,6 +194,10 @@ table {
 .months-nav button:hover {
   background: var(--primary-soft);
 }
+.months-nav button.active {
+  background: var(--primary);
+  color: #fff;
+}
 
 .legend {
   display: flex;
@@ -228,47 +229,77 @@ table {
   background: var(--user-soft);
 }
 
-.calendar {
-  display: grid;
-  gap: 1.25rem;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-}
 .month {
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
   background: #fff;
-  scroll-margin-top: 4rem;
+}
+.month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  background: var(--primary);
+  color: #fff;
 }
 .month h3 {
   margin: 0;
-  padding: 0.6rem 0.8rem;
-  background: var(--primary);
+  font-size: 1.05rem;
+}
+.step {
+  padding: 0.1rem 0.75rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: #fff;
-  font-size: 1rem;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+.step:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.18);
+}
+.step:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
+.cal {
+  table-layout: fixed;
+  --cell-bg: #fff;
+  --alt-bg: hsl(var(--hue-primary) 14% 94%);
+}
 .cal th {
-  padding: 0.4rem 0;
+  padding: 0.5rem 0;
   background: #eef2f0;
   font-size: 0.75rem;
 }
+.cal th .short {
+  display: none;
+}
 .cal td {
-  /* width: 14.28%; */
-  width: 3.4rem;
-  max-width: 3.4rem;
   height: 3.4rem;
   padding: 0.2rem 0.1rem;
   border: 1px solid var(--border);
+  background: var(--cell-bg);
+  overflow: hidden;
   text-align: center;
   vertical-align: top;
   font-size: 0.85rem;
+}
+/* Months alternate between two slightly different backgrounds, days of other years are greyed out */
+.cal td.odd {
+  --cell-bg: var(--alt-bg);
+}
+.cal td.out {
+  --cell-bg: #ececec;
+  color: var(--muted);
 }
 .cal td.weekend {
   background: repeating-linear-gradient(
     135deg,
     var(--weekend-soft) 0 2px,
-    #fff 2px 5px
+    var(--cell-bg) 2px 5px
   );
 }
 .cal td.state {
@@ -284,11 +315,15 @@ table {
   overflow: hidden;
   border-radius: 2px;
   background: rgb(255 255 255 / 0.65);
-  text-wrap: wrap;
   font-size: 0.56rem;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Label on the first and last day of every month */
+.cal small.edge {
+  background: var(--primary);
+  color: #fff;
 }
 .cal tfoot td {
   height: auto;
@@ -299,4 +334,25 @@ table {
 }
 .cal .after {
   color: var(--user);
+}
+
+@media (min-width: 700px) {
+  .cal td {
+    height: 4.6rem;
+    font-size: 1rem;
+  }
+  .cal th {
+    font-size: 0.85rem;
+  }
+  .cal small {
+    font-size: 0.7rem;
+  }
+}
+@media (max-width: 699px) {
+  .cal th .long {
+    display: none;
+  }
+  .cal th .short {
+    display: inline;
+  }
 }
