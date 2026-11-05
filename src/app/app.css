@@ -47,10 +47,7 @@
 .page {
   max-width: 1200px;
   margin: 0 auto;
-  padding-top: 1rem;
-  padding-right: 1rem;
-  padding-bottom: 3rem;
-  padding-left: 1rem;
+  padding: 1.25rem 1rem 3rem;
 }
 h1 {
   margin: 0.25rem 0 0.25rem;
@@ -197,7 +194,6 @@ table {
 .months-nav button:hover {
   background: var(--primary-soft);
 }
-
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -228,47 +224,53 @@ table {
   background: var(--user-soft);
 }
 
-.calendar {
-  display: grid;
-  gap: 1.25rem;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-}
 .month {
   border: 1px solid var(--border);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: clip;
   background: #fff;
-  scroll-margin-top: 4rem;
-}
-.month h3 {
-  margin: 0;
-  padding: 0.6rem 0.8rem;
-  background: var(--primary);
-  color: #fff;
-  font-size: 1rem;
 }
 
+.cal {
+  table-layout: fixed;
+  --cell-bg: #fff;
+  --alt-bg: hsl(var(--hue-primary) 14% 94%);
+}
 .cal th {
-  padding: 0.4rem 0;
+  position: sticky;
+  top: var(--bar-h, 2.7rem);
+  z-index: 5;
+  padding: 0.5rem 0;
   background: #eef2f0;
+  box-shadow: 0 1px 0 var(--border);
   font-size: 0.75rem;
 }
+.cal th .short {
+  display: none;
+}
 .cal td {
-  /* width: 14.28%; */
-  width: 3.4rem;
-  max-width: 3.4rem;
   height: 3.4rem;
   padding: 0.2rem 0.1rem;
   border: 1px solid var(--border);
+  background: var(--cell-bg);
+  overflow: hidden;
   text-align: center;
   vertical-align: top;
   font-size: 0.85rem;
+}
+/* Months alternate between two slightly different backgrounds, days of other years are greyed out */
+.cal td.odd {
+  --cell-bg: var(--alt-bg);
+}
+.cal td.out {
+  --cell-bg: #ececec;
+  color: var(--muted);
 }
 .cal td.weekend {
   background: repeating-linear-gradient(
     135deg,
     var(--weekend-soft) 0 2px,
-    #fff 2px 5px
+    var(--cell-bg) 2px 5px
   );
 }
 .cal td.state {
@@ -290,13 +292,48 @@ table {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cal tfoot td {
-  height: auto;
-  padding: 0.55rem;
-  border-top: 2px solid var(--primary);
-  background: #f3f6f4;
-  font-size: 0.85rem;
+/* Label on the first and last day of every month */
+.cal small.edge {
+  background: var(--primary);
+  color: #fff;
 }
-.cal .after {
-  color: var(--user);
+/* One banner per month: name + working days */
+.cal .month-row td {
+  height: auto;
+  padding: 0.6rem 0.8rem;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+  text-align: left;
+  font-size: 0.95rem;
+}
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+}
+.banner .after {
+  color: var(--user-soft);
+}
+
+@media (min-width: 700px) {
+  .cal td {
+    height: 4.6rem;
+    font-size: 1rem;
+  }
+  .cal th {
+    font-size: 0.85rem;
+  }
+  .cal small {
+    font-size: 0.7rem;
+  }
+}
+@media (max-width: 699px) {
+  .cal th .long {
+    display: none;
+  }
+  .cal th .short {
+    display: inline;
+  }
 }
