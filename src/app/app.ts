@@ -57,7 +57,10 @@ export class App implements AfterViewInit {
 
   readonly total = signal(DEFAULT_ALLOWANCE);
   readonly userDays = signal<string[]>([]);
-  readonly message = signal('');
+  readonly message = signal(''); // error shown under the form
+  readonly info = signal(''); // success note for ranges
+  readonly start = signal('');
+  readonly end = signal('');
 
   readonly stateRows = HOLIDAYS.map(h => toRow(h.date, h.name));
   readonly weekendCount = this.stateRows.filter(r => r.weekend).length;
@@ -145,17 +148,57 @@ export class App implements AfterViewInit {
     });
   }
 
-  add(input: HTMLInputElement): void {
-    const error = this.validate(input.value);
-    this.message.set(error ?? '');
-    if (error) return;
-    this.userDays.update(days => [...days, input.value].sort());
-    input.value = '';
+  /** Choosing a start date also fills the end date, so a single day only needs one pick. */
+  setStart(value: string): void {
+    this.start.set(value);
+    this.end.set(value);
+  }
+
+  setEnd(value: string): void {
+    this.end.set(value && value < this.start() ? this.start() : value);
+  }
+
+  /** Adds every working day between start and end (weekends and state holidays are skipped). */
+  add(): void {
+    this.message.set('');
+    this.info.set('');
+    const start = this.start();
+    const end = this.end() || start;
+    if (!start) return this.message.set('Alege o dată de început.');
+    if (!start.startsWith(`${YEAR}-`) || !end.startsWith(`${YEAR}-`)) return this.message.set(`Alege date din ${YEAR}.`);
+
+    const picked: string[] = [];
+    let skipped = 0;
+    let lastReason = '';
+    for (const d = parse(start); toIso(d) <= end; d.setDate(d.getDate() + 1)) {
+      const iso = toIso(d);
+      const reason = this.skipReason(iso);
+      if (reason) { skipped++; lastReason = reason; } else picked.push(iso);
+    }
+
+    const single = start === end;
+    if (!picked.length) {
+      return this.message.set(single ? lastReason : 'Intervalul ales nu conține nicio zi lucrătoare disponibilă.');
+    }
+    if (picked.length > this.remaining()) {
+      return this.message.set(this.remaining() <= 0
+        ? 'Nu mai ai zile de concediu. Mărește totalul pentru a adăuga alte zile.'
+        : `Intervalul are ${picked.length} zile lucrătoare, dar mai ai doar ${this.remaining()} zile de concediu.`);
+    }
+
+    this.userDays.update(days => [...days, ...picked].sort());
+    if (!single) {
+      this.info.set(`Au fost adăugate ${picked.length} zile` +
+        (skipped ? ` (${skipped} ignorate: weekend, sărbători legale sau zile deja alese).` : '.'));
+    }
+    this.start.set('');
+    this.end.set('');
   }
 
   remove(iso: string): void {
     this.userDays.update(days => days.filter(d => d !== iso));
     this.message.set('');
+    this.info.set('');
   }
 
   setTotal(value: string): void {
@@ -179,12 +222,10 @@ export class App implements AfterViewInit {
     new ResizeObserver(() => this.host.nativeElement.style.setProperty('--bar-h', bar.offsetHeight + 'px')).observe(bar);
   }
 
-  private validate(iso: string): string | null {
-    if (!iso || !iso.startsWith(`${YEAR}-`)) return `Alege o dată din ${YEAR}.`;
+  private skipReason(iso: string): string | null {
     if (isWeekend(parse(iso))) return 'Ziua aleasă este în weekend, nu consumă concediu.';
     if (STATE_DAYS.has(iso)) return 'Ziua aleasă este deja zi liberă legală.';
     if (this.userDays().includes(iso)) return 'Ai ales deja această zi.';
-    if (this.remaining() <= 0) return 'Nu mai ai zile de concediu. Mărește totalul pentru a adăuga alte zile.';
     return null;
   }
 }

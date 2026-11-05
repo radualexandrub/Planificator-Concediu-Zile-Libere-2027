@@ -124,6 +124,16 @@ input:focus-visible {
   font-size: 0.9rem;
 }
 
+.info {
+  margin: 0.75rem 0 0;
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+.controls input:disabled {
+  background: #f1f3f2;
+  cursor: not-allowed;
+}
+
 /* State + user lists: stacked on mobile, side by side on desktop */
 .lists {
   display: grid;

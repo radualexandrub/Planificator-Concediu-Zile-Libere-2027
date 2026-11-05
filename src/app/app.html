@@ -9,7 +9,7 @@
 </div>
 
 <main class="page">
-  <h1>Planificator concediu - Zile libere {{ year }}</h1>
+  <h1>Zile libere {{ year }}</h1>
   <p class="summary">
     În {{ year }} sunt {{ stateRows.length }} zile libere legale: {{ weekendCount }} în weekend și
     <strong>{{ weekdayCount }} în timpul săptămânii</strong>
@@ -23,13 +23,22 @@
         <input type="number" min="0" step="1" [value]="total()" (input)="setTotal($any($event.target).value)">
       </label>
       <label>
-        Alege o zi de concediu
-        <input #day type="date" [min]="minDate" [max]="maxDate" (keyup.enter)="add(day)">
+        De la
+        <input type="date" [min]="minDate" [max]="maxDate" [value]="start()"
+               (change)="setStart($any($event.target).value)" (keyup.enter)="add()">
       </label>
-      <button type="button" (click)="add(day)">Adaugă ziua</button>
+      <label>
+        Până la
+        <input type="date" [min]="start() || minDate" [max]="maxDate" [value]="end()" [disabled]="!start()"
+               (change)="setEnd($any($event.target).value)" (keyup.enter)="add()">
+      </label>
+      <button type="button" (click)="add()">Adaugă</button>
     </div>
     @if (message()) {
       <p class="error" role="alert">{{ message() }}</p>
+    }
+    @if (info()) {
+      <p class="info" role="status">{{ info() }}</p>
     }
   </section>
 
