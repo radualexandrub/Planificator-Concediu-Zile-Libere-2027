@@ -1,4 +1,4 @@
-name: Deploy Vacation-Days-Planner to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
