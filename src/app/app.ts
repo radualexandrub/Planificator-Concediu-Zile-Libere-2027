@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, ElementRef, computed, effect, inject, signal } from '@angular/core';
 import { HOLIDAYS, YEAR } from './holidays';
+import { Footer } from './footer';
 
 const MONTHS = ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
   'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'];
@@ -44,6 +45,7 @@ function toRow(iso: string, name: string): Row {
 
 @Component({
   selector: 'app-root',
+  imports: [Footer],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

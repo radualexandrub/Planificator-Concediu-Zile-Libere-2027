@@ -11,7 +11,7 @@
   white-space: nowrap;
 }
 
-/* Sticky vacation balance */
+/* Sticky vacation balance - acts as a navbar */
 .balance-bar {
   position: sticky;
   top: 0;
@@ -44,6 +44,7 @@
   background: #ffb4ab;
 }
 
+/* Page content - Main Container */
 .page {
   max-width: 1200px;
   margin: 0 auto;
@@ -73,7 +74,7 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
-/* Planner */
+/* Planner section with user inputs */
 .planner {
   background: #fff;
   border: 1px solid var(--border);
@@ -134,7 +135,8 @@ input:focus-visible {
   cursor: not-allowed;
 }
 
-/* State + user lists: stacked on mobile, side by side on desktop */
+/* Free days from state + user lists section: 
+   tables stacked on mobile, side by side on desktop */
 .lists {
   display: grid;
   grid-template-columns: 1fr;
@@ -187,7 +189,7 @@ table {
   background: var(--user-soft);
 }
 
-/* Calendar */
+/* Calendar Section */
 .months-nav {
   display: flex;
   flex-wrap: wrap;
