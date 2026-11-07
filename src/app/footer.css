@@ -16,6 +16,45 @@
   box-shadow: -2px -3px 8px rgb(0 0 0 / 0.1);
   color: var(--font-opposite-color);
   text-align: center;
+  /* Needed for SVG background integration */
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 10rem;
+}
+
+/* SVG as decorative background, not part of the content */
+.footer::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: url('./undraw_mindfulness.svg');
+  background-position: 1% center;
+  background-size: 10rem;
+  background-repeat: no-repeat;
+  opacity: 0.3;
+  content: '';
+  pointer-events: none;
+}
+
+.footer::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: url('./undraw_relaxing_outdoors.svg');
+  background-position: 98% center;
+  background-size: 8rem;
+  background-repeat: no-repeat;
+  opacity: 0.3;
+  content: '';
+  pointer-events: none;
+}
+
+.footer > div {
+  position: relative;
 }
 
 .footer p {
