@@ -135,3 +135,12 @@
 </main>
 
 <app-footer></app-footer>
+
+@if (showBackToTop()) {
+  <button class="back-to-top" type="button" 
+          aria-label="Înapoi sus" title="Înapoi sus" (click)="backToTop()">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 19V5m-7 7 7-7 7 7" />
+    </svg>
+  </button>
+}

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, computed, effect, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { HOLIDAYS, YEAR } from './holidays';
 import { Footer } from './footer';
 
@@ -63,6 +63,7 @@ export class App implements AfterViewInit {
   readonly info = signal(''); // success note for ranges
   readonly start = signal('');
   readonly end = signal('');
+  readonly showBackToTop = signal(false);
 
   readonly stateRows = HOLIDAYS.map(h => toRow(h.date, h.name));
   readonly weekendCount = this.stateRows.filter(r => r.weekend).length;
@@ -215,6 +216,23 @@ export class App implements AfterViewInit {
     const bar = this.host.nativeElement.querySelector<HTMLElement>('.balance-bar')?.offsetHeight ?? 0;
     const head = this.host.nativeElement.querySelector<HTMLElement>('.cal thead')?.offsetHeight ?? 0;
     window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - bar - head, behavior: 'smooth' });
+  }
+
+  /**
+   * Show back to top arrow.
+   * It appears when user is within 1600px from the bottom 
+   * and scrolls smoothly to the top when clicked
+   */
+  @HostListener('window:scroll')
+  updateBackToTopVisibility(): void {
+    const distanceToBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+    this.showBackToTop.set(
+      window.scrollY > 0 
+      && distanceToBottom <= 1600);
+  }
+
+  backToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /** Keeps the sticky weekday header just below the sticky balance bar, whatever height it has. */
