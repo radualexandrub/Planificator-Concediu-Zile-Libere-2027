@@ -2,20 +2,57 @@
   /* Main brand colour: dark, desaturated green. Change the hue here and everything follows. */
   --hue-primary: 150;
   --primary: hsl(var(--hue-primary) 28% 24%);
+  --navbar-background: var(--primary);
+  --footer-background: color-mix(in srgb, var(--primary), black 10%);
   --primary-soft: hsl(var(--hue-primary) 30% 80%);
   --weekend-soft: hsl(var(--hue-primary) 22% 91%);
   --font-opposite-color: #fff;
+  /* Surfaces alternate for Calendar cells that merge into next month */
+  --surface: #fff;
+  --surface-alternate: hsl(var(--hue-primary) 14% 94%);
+  /* Surfaces for other UI elements */
+  --surface-muted: #ececec;
+  --surface-disabled: #f1f3f2;
+  --surface-control: #e6ebe8;
+  --surface-header: #eef2f0;
+  --surface-overlay: rgb(255 255 255 / 0.65);
 
   /* User days: the same colour with the hue rotated by 60 degrees. */
   --hue-user: calc(var(--hue-primary) - 120);
   --user: hsl(var(--hue-user) 28% 24%);
   --user-soft: hsl(var(--hue-user) 40% 80%);
+  --user-highlight: var(--user-soft);
 
-  --bg: hsl(var(--hue-primary) 18% 96%);
+  --background-color: hsl(var(--hue-primary) 18% 96%);
   --text: #1d2b25;
   --muted: #8b958f;
   --border: #dbe2de;
   --danger: #b3261e;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --primary: hsl(var(--hue-primary) 28% 36%);
+  --navbar-background: color-mix(in srgb, var(--primary), black 25%);
+  --footer-background: color-mix(in srgb, var(--primary), black 40%);
+  --primary-soft: hsl(var(--hue-primary) 25% 25%);
+  --weekend-soft: hsl(var(--hue-primary) 17% 20%);
+  --surface: hsl(var(--hue-primary) 12% 10%);
+  --surface-alternate: hsl(var(--hue-primary) 12% 13%);
+  --surface-muted: hsl(var(--hue-primary) 10% 23%);
+  --surface-disabled: hsl(var(--hue-primary) 12% 18%);
+  --surface-control: hsl(var(--hue-primary) 18% 24%);
+  --surface-header: hsl(var(--hue-primary) 14% 20%);
+  --surface-overlay: rgb(255 255 255 / 0.12);
+  --user: hsl(var(--hue-user) 38% 46%);
+  --user-soft: hsl(var(--hue-user) 28% 37%);
+  --user-highlight: hsl(var(--hue-user) 50% 80%);
+  --background-color: hsl(var(--hue-primary) 12% 7%);
+  --text: hsl(var(--hue-primary) 12% 91%);
+  --muted: hsl(var(--hue-primary) 8% 66%);
+  --border: hsl(var(--hue-primary) 12% 28%);
+  --danger: #ffb4ab;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -28,9 +65,10 @@
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--bg);
+  background: var(--background-color);
   color: var(--text);
   font: 15px/1.5 "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  transition: background 100ms ease-in;
 }
 
 app-root {

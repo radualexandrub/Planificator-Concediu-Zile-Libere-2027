@@ -16,8 +16,8 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--primary);
-  color: #fff;
+  background: var(--navbar-background);
+  color: var(--font-opposite-color);
   padding: 0.6rem 1rem;
 }
 .balance-inner {
@@ -32,7 +32,7 @@
   flex: 1 1 140px;
   height: 8px;
   border-radius: 4px;
-  background: rgb(255 255 255 / 0.25);
+  background: color-mix(in srgb, var(--font-opposite-color) 25%, transparent);
   overflow: hidden;
 }
 .fill {
@@ -76,7 +76,7 @@ input:focus-visible {
 
 /* Planner section with user inputs */
 .planner {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.25rem 1rem 1rem;
@@ -100,6 +100,7 @@ input:focus-visible {
 .controls input {
   font: inherit;
   color: var(--text);
+  background: var(--surface);
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -114,7 +115,7 @@ input:focus-visible {
   border: 0;
   border-radius: 6px;
   background: var(--user);
-  color: #fff;
+  color: var(--font-opposite-color);
 }
 .controls button:hover {
   filter: brightness(1.15);
@@ -131,7 +132,7 @@ input:focus-visible {
   font-size: 0.9rem;
 }
 .controls input:disabled {
-  background: #f1f3f2;
+  background: var(--surface-disabled);
   cursor: not-allowed;
 }
 
@@ -155,11 +156,11 @@ input:focus-visible {
 table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--surface);
 }
 .list th {
-  background: var(--primary);
-  color: #fff;
+  background: var(--footer-background);
+  color: var(--font-opposite-color);
   text-align: left;
   padding: 0.7rem 0.8rem;
   font-weight: 600;
@@ -200,7 +201,7 @@ table {
   padding: 0.35rem 0.8rem;
   border: 0;
   border-radius: 6px;
-  background: #e6ebe8;
+  background: var(--surface-control);
   color: var(--text);
 }
 .months-nav button:hover {
@@ -226,7 +227,7 @@ table {
   background: repeating-linear-gradient(
     135deg,
     var(--weekend-soft) 0 2px,
-    #fff 2px 5px
+    var(--surface) 2px 5px
   );
 }
 .swatch.state {
@@ -240,22 +241,23 @@ table {
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: clip;
-  background: #fff;
+  background: var(--surface);
 }
 
 .cal {
   table-layout: fixed;
-  --cell-bg: #fff;
-  --alt-bg: hsl(var(--hue-primary) 14% 94%);
+  --cell-bg: var(--surface);
+  --alt-bg: var(--surface-alternate);
 }
 .cal th {
   position: sticky;
   top: var(--bar-h, 2.7rem);
   z-index: 5;
   padding: 0.5rem 0;
-  background: #eef2f0;
+  background: var(--surface-header);
   box-shadow: 0 1px 0 var(--border);
   font-size: 0.75rem;
+  transition: background border 100ms ease-in;
 }
 .cal th .short {
   display: none;
@@ -269,13 +271,14 @@ table {
   text-align: center;
   vertical-align: top;
   font-size: 0.85rem;
+  transition: background border 100ms ease-in;
 }
 /* Months alternate between two slightly different backgrounds, days of other years are greyed out */
 .cal td.odd {
   --cell-bg: var(--alt-bg);
 }
 .cal td.out {
-  --cell-bg: #ececec;
+  --cell-bg: var(--surface-muted);
   color: var(--muted);
 }
 .cal td.weekend {
@@ -297,7 +300,7 @@ table {
   padding: 0 0.1rem;
   overflow: hidden;
   border-radius: 2px;
-  background: rgb(255 255 255 / 0.65);
+  background: var(--surface-overlay);
   text-wrap: wrap;
   font-size: 0.56rem;
   line-height: 1.2;
@@ -307,15 +310,15 @@ table {
 /* Label on the first and last day of every month */
 .cal small.edge {
   background: var(--primary);
-  color: #fff;
+  color: var(--font-opposite-color);
 }
 /* One banner per month: name + working days */
 .cal .month-row td {
   height: auto;
   padding: 0.6rem 0.8rem;
-  border-color: var(--primary);
-  background: var(--primary);
-  color: #fff;
+  border-color: var(--footer-background);
+  background: var(--footer-background);
+  color: var(--font-opposite-color);
   text-align: left;
   font-size: 0.95rem;
 }
@@ -326,7 +329,7 @@ table {
   gap: 0.2rem 1rem;
 }
 .banner .after {
-  color: var(--user-soft);
+  color: var(--user-highlight);
 }
 
 @media (min-width: 700px) {

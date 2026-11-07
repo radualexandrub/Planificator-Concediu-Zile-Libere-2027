@@ -1,7 +1,16 @@
 <div class="footer-separator"></div>
 <footer class="footer">
   <div>
-    <p>
+    <p class="icons">
+      <button
+        class="theme-toggle"
+        type="button"
+        (click)="onToggleDarkTheme()"
+        title="Toggle between light/dark theme"
+        aria-label="Toggle between light and dark theme"
+      >
+        <fa-icon [icon]="faMoon"></fa-icon>
+      </button>
       <a
         target="_blank"
         rel="noopener noreferrer"
