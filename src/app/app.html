@@ -118,8 +118,8 @@
             <tr>
               @for (c of row.cells ?? []; track c.iso) {
                 <td [class.weekend]="c.weekend" [class.state]="!!c.state" [class.user]="c.user"
-                    [class.odd]="c.odd" [class.out]="!c.inYear" [class.pickable]="canPick(c)"
-                    [title]="c.state ?? (c.user ? 'Concediu' : canPick(c) ? 'Adaugă concediu' : '')"
+                    [class.odd]="c.odd" [class.out]="!c.inYear" [class.pickable]="canPickFreeDay(c)"
+                    [title]="c.state ?? (c.user ? 'Concediu' : canPickFreeDay(c) ? 'Adaugă concediu' : '')"
                     (click)="addFromCalendar(c)">
                   <span class="n">{{ c.day }}</span>
                   @if (c.user) {
