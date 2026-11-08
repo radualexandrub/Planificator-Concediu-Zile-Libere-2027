@@ -31,7 +31,7 @@
   position: absolute;
   z-index: -1;
   inset: 0;
-  background-image: url('./undraw_mindfulness.svg');
+  background-image: url('../../public/undraw_mindfulness.svg');
   background-position: 1% center;
   background-size: 10rem;
   background-repeat: no-repeat;
@@ -44,9 +44,9 @@
   position: absolute;
   z-index: -1;
   inset: 0;
-  background-image: url('./undraw_relaxing_outdoors.svg');
-  background-position: 98% center;
-  background-size: 8rem;
+  background-image: url('../../public/undraw_relaxing_outdoors.svg');
+  background-position: 98% 110%;
+  background-size: 10rem;
   background-repeat: no-repeat;
   opacity: 0.3;
   content: '';
