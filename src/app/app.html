@@ -118,12 +118,14 @@
             <tr>
               @for (c of row.cells ?? []; track c.iso) {
                 <td [class.weekend]="c.weekend" [class.state]="!!c.state" [class.user]="c.user"
-                    [class.odd]="c.odd" [class.out]="!c.inYear" [title]="c.state ?? (c.user ? 'Concediu' : '')">
+                    [class.odd]="c.odd" [class.out]="!c.inYear" [class.pickable]="canPick(c)"
+                    [title]="c.state ?? (c.user ? 'Concediu' : canPick(c) ? 'Adaugă concediu' : '')"
+                    (click)="addFromCalendar(c)">
                   <span class="n">{{ c.day }}</span>
                   @if (c.user) {
                     <button type="button" class="remove-day" title="Șterge"
                             [attr.aria-label]="'Șterge concediul din ' + c.day + ' ' + c.monthShort"
-                            (click)="remove(c.iso)">
+                            (click)="remove(c.iso); $event.stopPropagation()">
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M6 6l12 12M18 6 6 18" />
                       </svg>

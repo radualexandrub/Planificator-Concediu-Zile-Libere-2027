@@ -161,30 +161,55 @@ export class App implements AfterViewInit {
     this.end.set(value && value < this.start() ? this.start() : value);
   }
 
-  /** Adds every working day between start and end (weekends and state holidays are skipped). */
+  /** Adds every working day between the input form's start and end dates */
   add(): void {
+    const start = this.start();
+    if (this.addRange(start, this.end() || start)) {
+      this.start.set('');
+      this.end.set('');
+    }
+  }
+
+  /** A free working day of this year that can still be booked */
+  canPickFreeDay(selectedCell: Cell): boolean {
+    return selectedCell.inYear && 
+          !selectedCell.weekend && 
+          !selectedCell.state && 
+          !selectedCell.user && 
+          this.remaining() > 0;
+  }
+
+  /** Clicking a free day in the calendar adds it exactly like picking it in the input form */
+  addFromCalendar(selectedCell: Cell): void {
+    if (this.canPickFreeDay(selectedCell)) this.addRange(selectedCell.iso, selectedCell.iso);
+  }
+
+  /**
+   * Shared by the input form and the calendar: adds every working day between start and end
+   * (weekends and state holidays are skipped). Returns true when days were added
+   */
+  private addRange(startDate: string, endDate: string): boolean {
     this.message.set('');
     this.info.set('');
-    const start = this.start();
-    const end = this.end() || start;
-    if (!start) return this.message.set('Alege o dată de început.');
-    if (!start.startsWith(`${YEAR}-`) || !end.startsWith(`${YEAR}-`)) return this.message.set(`Alege date din ${YEAR}.`);
+    if (!startDate) return this.failToAddFreeDay('Alege o dată de început.');
+    if (!startDate.startsWith(`${YEAR}-`) || !endDate.startsWith(`${YEAR}-`)) 
+      return this.failToAddFreeDay(`Alege date din ${YEAR}.`);
 
     const picked: string[] = [];
     let skipped = 0;
     let lastReason = '';
-    for (const d = parse(start); toIso(d) <= end; d.setDate(d.getDate() + 1)) {
+    for (const d = parse(startDate); toIso(d) <= endDate; d.setDate(d.getDate() + 1)) {
       const iso = toIso(d);
       const reason = this.skipReason(iso);
       if (reason) { skipped++; lastReason = reason; } else picked.push(iso);
     }
 
-    const single = start === end;
+    const single = startDate === endDate;
     if (!picked.length) {
-      return this.message.set(single ? lastReason : 'Intervalul ales nu conține nicio zi lucrătoare disponibilă.');
+      return this.failToAddFreeDay(single ? lastReason : 'Intervalul ales nu conține nicio zi lucrătoare disponibilă.');
     }
     if (picked.length > this.remaining()) {
-      return this.message.set(this.remaining() <= 0
+      return this.failToAddFreeDay(this.remaining() <= 0
         ? 'Nu mai ai zile de concediu. Mărește totalul pentru a adăuga alte zile.'
         : `Intervalul are ${picked.length} zile lucrătoare, dar mai ai doar ${this.remaining()} zile de concediu.`);
     }
@@ -194,8 +219,12 @@ export class App implements AfterViewInit {
       this.info.set(`Au fost adăugate ${picked.length} zile` +
         (skipped ? ` (${skipped} ignorate: weekend, sărbători legale sau zile deja alese).` : '.'));
     }
-    this.start.set('');
-    this.end.set('');
+    return true;
+  }
+
+  private failToAddFreeDay(text: string): false {
+    this.message.set(text);
+    return false;
   }
 
   remove(iso: string): void {

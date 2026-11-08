@@ -331,6 +331,18 @@ table {
 .cal td.user {
   background: var(--user-soft);
 }
+/* Free working days can be clicked to book them */
+.cal td.pickable {
+  cursor: pointer;
+  user-select: none;
+}
+@media (hover: hover) {
+  .cal td.pickable:hover {
+    /* a softer preview of the vacation color */
+    background: color-mix(in srgb, var(--user-soft) 35%, var(--cell-bg));
+  }
+}
+
 .cal small {
   display: block;
   margin-top: 0.15rem;
