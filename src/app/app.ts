@@ -266,6 +266,11 @@ export class App implements AfterViewInit {
     this.info.set('');
   }
 
+  updateLabel(iso: string, value: string): void {
+    const label = value.trim() || DEFAULT_LABEL;
+    this.userDays.update(days => days.map(day => day.iso === iso ? { ...day, label } : day));
+  }
+
   setTotal(value: string): void {
     const n = Math.floor(Number(value));
     this.total.set(Number.isFinite(n) && n > 0 ? n : 0);

@@ -208,6 +208,17 @@ table {
   padding: 0.55rem 0.8rem;
   border-bottom: 1px solid var(--border);
 }
+.user-list-label-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: text;
+  border-radius: 3px;
+}
 .list tr.weekend td {
   color: var(--muted);
 }

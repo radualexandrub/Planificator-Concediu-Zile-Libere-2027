@@ -81,7 +81,12 @@
               <tr>
                 <td>{{ r.label }}</td>
                 <td>{{ r.weekday }}</td>
-                <td>{{ r.name }}</td>
+                <td>
+                  <input class="user-list-label-input" type="text" maxlength="30" 
+                         [value]="r.name"
+                         [attr.aria-label]="'Eticheta pentru ' + r.label"
+                         (blur)="updateLabel(r.iso, $any($event.target).value)">
+                </td>
                 <td class="action">
                   <button type="button" class="remove" (click)="remove(r.iso)" [attr.aria-label]="'Șterge ' + r.label">
                     Șterge
