@@ -12,6 +12,7 @@ const WEEKDAY_HEADERS = [
 ];
 const STORAGE_KEY = 'zile-libere-' + YEAR;
 const DEFAULT_ALLOWANCE = 21;
+const DEFAULT_LABEL = 'Concediu';
 
 const STATE_DAYS = new Map(HOLIDAYS.map(h => [h.date, h.name]));
 
@@ -25,12 +26,35 @@ const isWeekend = (date: Date) => date.getDay() === 0 || date.getDay() === 6;
 const shortMonth = (m: number) => MONTHS[m].slice(0, 3);
 
 interface Row { iso: string; label: string; weekday: string; weekend: boolean; name: string; }
+interface UserDay { iso: string; label: string; }
 interface Cell {
-  iso: string; day: number; month: number; monthShort: string; odd: boolean; inYear: boolean;
-  weekend: boolean; state?: string; user: boolean; first: boolean; last: boolean;
+  iso: string; 
+  day: number; 
+  month: number; 
+  monthShort: string; 
+  odd: boolean; 
+  inYear: boolean;
+  weekend: boolean; 
+  state?: string; 
+  userLabel?: string; 
+  first: boolean; 
+  last: boolean;
 }
 interface CalRow { key: string; month?: MonthStat; cells?: Cell[]; }
 interface MonthStat { index: number; name: string; daysInMonth: number; work: number; vacation: number; }
+
+function toUserDay(value: unknown): UserDay | null {
+  if (typeof value === 'string') return { iso: value, label: DEFAULT_LABEL };
+  if (value && 
+      typeof value === 'object' && 
+      typeof (value as UserDay).iso === 'string') {
+    const { iso, label } = value as UserDay;
+    return { iso, label: typeof label === 'string' && label.trim() ? label.trim() : DEFAULT_LABEL };
+  }
+  return null;
+}
+
+const byIso = (a: UserDay, b: UserDay) => a.iso.localeCompare(b.iso);
 
 function toRow(iso: string, name: string): Row {
   const date = parse(iso);
@@ -58,25 +82,26 @@ export class App implements AfterViewInit {
   readonly weekdayHeaders = WEEKDAY_HEADERS;
 
   readonly total = signal(DEFAULT_ALLOWANCE);
-  readonly userDays = signal<string[]>([]);
+  readonly userDays = signal<UserDay[]>([]);
   readonly message = signal(''); // error shown under the form
   readonly info = signal(''); // success note for ranges
   readonly start = signal('');
   readonly end = signal('');
+  readonly label = signal('');
   readonly showBackToTop = signal(false);
 
   readonly stateRows = HOLIDAYS.map(h => toRow(h.date, h.name));
   readonly weekendCount = this.stateRows.filter(r => r.weekend).length;
   readonly weekdayCount = this.stateRows.length - this.weekendCount;
 
-  readonly userRows = computed(() => this.userDays().map(iso => toRow(iso, 'Concediu')));
+  readonly userRows = computed(() => this.userDays().map(d => toRow(d.iso, d.label)));
   readonly used = computed(() => this.userDays().length);
   readonly remaining = computed(() => this.total() - this.used());
   readonly percentUsed = computed(() => this.total() > 0 ? Math.min(100, (this.used() / this.total()) * 100) : 100);
 
   /** Working-day numbers for all 12 months. */
   readonly months = computed<MonthStat[]>(() => {
-    const user = new Set(this.userDays());
+    const user = new Set(this.userDays().map(d => d.iso));
     return MONTHS.map((name, m) => {
       const daysInMonth = new Date(YEAR, m + 1, 0).getDate();
       let work = 0;
@@ -98,7 +123,7 @@ export class App implements AfterViewInit {
    */
   readonly rows = computed<CalRow[]>(() => {
     const months = this.months();
-    const user = new Set(this.userDays());
+    const user = new Map(this.userDays().map(d => [d.iso, d.label]));
     const firstOfYear = new Date(YEAR, 0, 1);
     const lastOfYear = new Date(YEAR, 11, 31);
     const before = (firstOfYear.getDay() + 6) % 7; // days back to the previous Monday
@@ -121,7 +146,7 @@ export class App implements AfterViewInit {
         inYear,
         weekend: isWeekend(date),
         state: STATE_DAYS.get(iso),
-        user: user.has(iso),
+        userLabel: user.get(iso),
         first: inYear && date.getDate() === 1,
         last: inYear && date.getDate() === lastDay,
       });
@@ -140,7 +165,11 @@ export class App implements AfterViewInit {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
       if (saved && Number.isFinite(saved.total)) this.total.set(saved.total);
       if (saved && Array.isArray(saved.days)) {
-        this.userDays.set(saved.days.filter((d: unknown) => typeof d === 'string' && d.startsWith(`${YEAR}-`)));
+        this.userDays.set(
+          saved.days
+            .map(toUserDay)
+            .filter((d: UserDay | null): d is UserDay => d !== null && d.iso.startsWith(`${YEAR}-`))
+            .sort(byIso));
       }
     } catch { /* storage unavailable: start fresh */ }
 
@@ -164,33 +193,37 @@ export class App implements AfterViewInit {
   /** Adds every working day between the input form's start and end dates */
   add(): void {
     const start = this.start();
-    if (this.addRange(start, this.end() || start)) {
+    if (this.addRange(start, this.end() || start, this.label())) {
       this.start.set('');
       this.end.set('');
+      this.label.set('');
     }
   }
 
   /** A free working day of this year that can still be booked */
   canPickFreeDay(selectedCell: Cell): boolean {
-    return selectedCell.inYear && 
-          !selectedCell.weekend && 
-          !selectedCell.state && 
-          !selectedCell.user && 
+    return selectedCell.inYear &&
+          !selectedCell.weekend &&
+          !selectedCell.state &&
+          !selectedCell.userLabel &&
           this.remaining() > 0;
   }
 
   /** Clicking a free day in the calendar adds it exactly like picking it in the input form */
   addFromCalendar(selectedCell: Cell): void {
-    if (this.canPickFreeDay(selectedCell)) this.addRange(selectedCell.iso, selectedCell.iso);
+    if (this.canPickFreeDay(selectedCell)) {
+      this.addRange(selectedCell.iso, selectedCell.iso, this.label());
+    }
   }
 
   /**
    * Shared by the input form and the calendar: adds every working day between start and end
    * (weekends and state holidays are skipped). Returns true when days were added
    */
-  private addRange(startDate: string, endDate: string): boolean {
+  private addRange(startDate: string, endDate: string, label: string): boolean {
     this.message.set('');
     this.info.set('');
+    const name = label.trim() || DEFAULT_LABEL;
     if (!startDate) return this.failToAddFreeDay('Alege o dată de început.');
     if (!startDate.startsWith(`${YEAR}-`) || !endDate.startsWith(`${YEAR}-`)) 
       return this.failToAddFreeDay(`Alege date din ${YEAR}.`);
@@ -214,7 +247,7 @@ export class App implements AfterViewInit {
         : `Intervalul are ${picked.length} zile lucrătoare, dar mai ai doar ${this.remaining()} zile de concediu.`);
     }
 
-    this.userDays.update(days => [...days, ...picked].sort());
+    this.userDays.update(days => [...days, ...picked.map(iso => ({ iso, label: name }))].sort(byIso));
     if (!single) {
       this.info.set(`Au fost adăugate ${picked.length} zile` +
         (skipped ? ` (${skipped} ignorate: weekend, sărbători legale sau zile deja alese).` : '.'));
@@ -228,7 +261,7 @@ export class App implements AfterViewInit {
   }
 
   remove(iso: string): void {
-    this.userDays.update(days => days.filter(d => d !== iso));
+    this.userDays.update(days => days.filter(d => d.iso !== iso));
     this.message.set('');
     this.info.set('');
   }
@@ -274,7 +307,7 @@ export class App implements AfterViewInit {
   private skipReason(iso: string): string | null {
     if (isWeekend(parse(iso))) return 'Ziua aleasă este în weekend, nu consumă concediu.';
     if (STATE_DAYS.has(iso)) return 'Ziua aleasă este deja zi liberă legală.';
-    if (this.userDays().includes(iso)) return 'Ai ales deja această zi.';
+    if (this.userDays().some(d => d.iso === iso)) return 'Ai ales deja această zi.';
     return null;
   }
 }

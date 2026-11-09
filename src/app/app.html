@@ -32,6 +32,13 @@
         <input type="date" [min]="start() || minDate" [max]="maxDate" [value]="end()" [disabled]="!start()"
                (change)="setEnd($any($event.target).value)" (keyup.enter)="add()">
       </label>
+      <label>
+        Eticheta
+        <input type="text" maxlength="32" placeholder="Concediu" 
+               [value]="label()" 
+               (input)="label.set($any($event.target).value)" 
+               (keyup.enter)="add()">
+      </label>
       <button type="button" (click)="add()">Adaugă</button>
     </div>
     @if (message()) {
@@ -61,14 +68,24 @@
       <section>
         <h2 style="color: var(--user);">Zilele mele de concediu</h2>
         <table class="list user-list">
-          <thead><tr><th>Data</th><th>Ziua</th><th><span class="sr-only">Șterge</span></th></tr></thead>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Ziua</th>
+              <th>Eticheta</th>
+              <th><span class="sr-only">Șterge</span></th>
+            </tr>
+          </thead>
           <tbody>
             @for (r of userRows(); track r.iso) {
               <tr>
                 <td>{{ r.label }}</td>
                 <td>{{ r.weekday }}</td>
+                <td>{{ r.name }}</td>
                 <td class="action">
-                  <button type="button" class="remove" (click)="remove(r.iso)" [attr.aria-label]="'Șterge ' + r.label">Șterge</button>
+                  <button type="button" class="remove" (click)="remove(r.iso)" [attr.aria-label]="'Șterge ' + r.label">
+                    Șterge
+                  </button>
                 </td>
               </tr>
             }
@@ -117,12 +134,12 @@
           } @else {
             <tr>
               @for (c of row.cells ?? []; track c.iso) {
-                <td [class.weekend]="c.weekend" [class.state]="!!c.state" [class.user]="c.user"
+                <td [class.weekend]="c.weekend" [class.state]="!!c.state" [class.user]="!!c.userLabel"
                     [class.odd]="c.odd" [class.out]="!c.inYear" [class.pickable]="canPickFreeDay(c)"
-                    [title]="c.state ?? (c.user ? 'Concediu' : canPickFreeDay(c) ? 'Adaugă concediu' : '')"
+                    [title]="c.state ?? c.userLabel ?? (canPickFreeDay(c) ? 'Adaugă concediu' : '')"
                     (click)="addFromCalendar(c)">
                   <span class="n">{{ c.day }}</span>
-                  @if (c.user) {
+                  @if (c.userLabel) {
                     <button type="button" class="remove-day" title="Șterge"
                             [attr.aria-label]="'Șterge concediul din ' + c.day + ' ' + c.monthShort"
                             (click)="remove(c.iso); $event.stopPropagation()">
@@ -132,7 +149,7 @@
                     </button>
                   }
                   @if (c.state) { <small>{{ c.state }}</small> }
-                  @else if (c.user) { <small>Concediu</small> }
+                  @else if (c.userLabel) { <small>{{ c.userLabel }}</small> }
                   @if (c.first) { <small class="edge">început {{ c.monthShort }}</small> }
                   @if (c.last) { <small class="edge">sfârșit {{ c.monthShort }}</small> }
                 </td>
