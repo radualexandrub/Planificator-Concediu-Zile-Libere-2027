@@ -93,6 +93,20 @@
   outline-offset: 4px;
 }
 
+.accent-color-control {
+  position: relative;
+  display: inline-flex;
+}
+.accent-color-control input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media screen and (max-width: 480px) {
   .footer {
     font-size: 0.9em;

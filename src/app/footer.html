@@ -2,12 +2,32 @@
 <footer class="footer">
   <div>
     <p class="icons">
+      <span class="accent-color-control">
+        <button
+          class="theme-toggle"
+          type="button"
+          (click)="onToggleAccentColor()"
+          title="Alege culoarea de accent personalizată"
+          aria-label="Alege culoarea de accent personalizată"
+          aria-controls="accentColorInput"
+        >
+          <fa-icon [icon]="faPaintBrush"></fa-icon>
+        </button>
+        <input
+          (input)="onChangeAccentColor($event)"
+          type="color"
+          id="accentColorInput"
+          name="accentColorInput"
+          [value]="accentColor"
+          aria-label="Accent color"
+        />
+      </span>
       <button
         class="theme-toggle"
         type="button"
         (click)="onToggleDarkTheme()"
-        title="Toggle between light/dark theme"
-        aria-label="Toggle between light and dark theme"
+        title="Comută între tema clară/întunecată"
+        aria-label="Comută între tema clară și cea închisă"
       >
         <fa-icon [icon]="faMoon"></fa-icon>
       </button>
@@ -15,9 +35,9 @@
         target="_blank"
         rel="noopener noreferrer"
         href="https://github.com/radualexandrub/Planificator-Concediu-Zile-Libere-2027"
-        aria-label="View the code on GitHub"
+        aria-label="Vezi codul sursă pe GitHub"
       >
-        <fa-icon [icon]="faGithub" title="View the code on GitHub"></fa-icon>
+        <fa-icon [icon]="faGithub" title="Vezi codul sursă pe GitHub"></fa-icon>
       </a>
     </p>
     <p>Creat cu <a target="_blank" rel="noopener noreferrer" href="https://angular.dev">Angular</a> 
