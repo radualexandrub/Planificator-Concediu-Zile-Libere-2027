@@ -1,3 +1,4 @@
+/* src/styles.css: Global CSS variables for consistent theming */
 :root {
   /* Main brand colour: dark, desaturated green. Change the hue here and everything follows. */
   --hue-primary: 150;

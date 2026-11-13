@@ -1,3 +1,4 @@
+/* src/app/app.css: Component-specific styles for the main app component */
 :host {
   display: block;
 }
@@ -90,6 +91,30 @@ h1 {
   margin: 0.25rem 0 0.25rem;
   color: var(--primary);
   font-size: 1.6rem;
+}
+.year-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0.75rem 0 1rem;
+  border-bottom: 2px solid var(--border);
+}
+.year-tabs button {
+  margin-bottom: -2px;
+  padding: 0.45rem 1.25rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+}
+.year-tabs button:hover {
+  background: var(--surface-control);
+  color: var(--text);
+}
+.year-tabs button.active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
 }
 h2 {
   margin: 1.5rem 0 0.6rem;

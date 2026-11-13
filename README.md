@@ -1,6 +1,6 @@
-# Planificator concediu - Zile libere 2027
+# Planificator concediu - Zile libere
 
-A static Angular app that lists the legal public holidays in Romania for 2027 and shows them on a continuous year calendar. You can also plan your own company leave on top of it: pick single days or date ranges, track how many leave days you have left, and see the resulting working days for every month.
+A static Angular app that lists the legal public holidays in Romania for 2026 and 2027 and shows them on a continuous year calendar. You can also plan your own company leave on top of it: pick single days or date ranges, track how many leave days you have left, and see the resulting working days for every month.
 
 There is no backend and no server-side dependency. The build output is plain HTML, CSS and JS, so it runs on any static host such as GitHub Pages.
 
@@ -18,6 +18,7 @@ node -v
 ## Features
 
 - **Legal holidays list**: all 17 legal free days of 2027 with date, weekday and name. Weekend rows are greyed out, and the summary sentence ("8 în weekend și 9 în timpul săptămânii") is computed from the data.
+- **Selectable years**: switch between 2026 and 2027; the holidays, calendar, vacation balance, and saved leave days all follow the selected year. The app remembers your last selection.
 - **Personal leave planner**: choose a start date ("De la") and an end date ("Până la"), then press **Adaugă**.
   - Picking the start date fills the end date automatically, so a single day takes one pick.
   - For a range, every working day between the two dates is added as its own entry.
@@ -76,7 +77,7 @@ src/
   index.html          Page shell and relative base href
   styles.css          Global colour variables (theme)
   app/
-    holidays.ts       Year and list of legal holidays
+    holidays.ts       Years and lists of legal holidays
     app.ts            State and logic (signals)
     app.html          Template
     app.css           Component styles
@@ -90,7 +91,7 @@ src/
 
 - **Theme colour**: change `--hue-primary` in `src/styles.css`. The leave colour is derived from it as `--hue-user: calc(var(--hue-primary) - 120)`
 - **Default allowance**: change `DEFAULT_ALLOWANCE` in `src/app/app.ts` (currently 21 days)
-- **Holidays or year**: edit `YEAR` and the `HOLIDAYS` list in `src/app/holidays.ts`, and update the page title in `src/index.html`. The saved data is stored per year, so changing the year starts with a clean planner
+- **Holidays or year**: add a holiday list to `HOLIDAYS_BY_YEAR` in `src/app/holidays.ts`. The year tab, calendar, and separate saved planner data are generated from that list
 
 <br/>
 

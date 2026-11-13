@@ -1,6 +1,7 @@
+<!-- src/app/app.html: Main application template -->
 <div class="balance-bar" [class.over]="remaining() <= 0">
   <div class="balance-inner">
-    <span>Concediu rămas: <strong>{{ remaining() }}</strong> din {{ total() }} zile</span>
+    <span>Concediu rămas {{ year() }}: <strong>{{ remaining() }}</strong> din {{ total() }} zile</span>
     <div class="bar" role="progressbar" aria-label="Zile de concediu folosite"
          [attr.aria-valuenow]="used()" aria-valuemin="0" [attr.aria-valuemax]="total()">
       <div class="fill" [style.width.%]="percentUsed()"></div>
@@ -9,10 +10,17 @@
 </div>
 
 <main class="page">
-  <h1>Planificator concediu - Zile libere {{ year }}</h1>
+  <h1>Planificator concediu - Zile libere {{ year() }}</h1>
+  <nav class="year-tabs" aria-label="Alege anul">
+    @for (y of years; track y) {
+      <button type="button" [class.active]="y === year()"
+              [attr.aria-current]="y === year() ? 'true' : null"
+              (click)="selectYear(y)">{{ y }}</button>
+    }
+  </nav>
   <p class="summary">
-    În {{ year }} sunt {{ stateRows.length }} zile libere legale: {{ weekendCount }} în weekend și
-    <strong>{{ weekdayCount }} în timpul săptămânii</strong>
+    În {{ year() }} sunt {{ stateRows().length }} zile libere legale: {{ weekendCount() }} în weekend și
+    <strong>{{ weekdayCount() }} în timpul săptămânii</strong>
   </p>
 
   <section class="planner">
@@ -24,12 +32,12 @@
       </label>
       <label>
         De la
-        <input type="date" [min]="minDate" [max]="maxDate" [value]="start()"
+        <input type="date" [min]="minDate()" [max]="maxDate()" [value]="start()"
                (change)="setStart($any($event.target).value)" (keyup.enter)="add()">
       </label>
       <label>
         Până la
-        <input type="date" [min]="start() || minDate" [max]="maxDate" [value]="end()" [disabled]="!start()"
+        <input type="date" [min]="start() || minDate()" [max]="maxDate()" [value]="end()" [disabled]="!start()"
                (change)="setEnd($any($event.target).value)" (keyup.enter)="add()">
       </label>
       <label>
@@ -51,11 +59,11 @@
 
   <div class="lists" [class.with-user]="userRows().length">
     <section>
-      <h2>Zile libere legale</h2>
+      <h2>Zile libere legale {{ year() }}</h2>
       <table class="list">
         <thead><tr><th>Data</th><th>Ziua</th><th>Sărbători legale</th></tr></thead>
         <tbody>
-          @for (r of stateRows; track r.iso) {
+          @for (r of stateRows(); track r.iso) {
             <tr [class.weekend]="r.weekend">
               <td>{{ r.label }}</td><td>{{ r.weekday }}</td><td>{{ r.name }}</td>
             </tr>
@@ -66,7 +74,7 @@
 
     @if (userRows().length) {
       <section>
-        <h2 style="color: var(--user);">Zilele mele de concediu</h2>
+        <h2 style="color: var(--user);">Zilele mele de concediu {{ year() }}</h2>
         <table class="list user-list">
           <thead>
             <tr>
@@ -100,7 +108,7 @@
     }
   </div>
 
-  <h2>Calendar {{ year }}</h2>
+  <h2>Calendar {{ year() }}</h2>
   <nav class="months-nav" aria-label="Salt la lună">
     @for (m of months(); track m.index) {
       <button type="button" [title]="m.work + ' zile lucrătoare din ' + m.daysInMonth" (click)="goTo(m.index)">{{ m.name }}</button>
@@ -128,7 +136,7 @@
             <tr class="month-row" [id]="row.key">
               <td colspan="7">
                 <div class="banner">
-                  <strong>{{ m.name }} {{ year }}</strong>
+                  <strong>{{ m.name }} {{ year() }}</strong>
                   <span>
                     Zile lucrătoare: <strong>{{ m.work }}</strong> din {{ m.daysInMonth }}
                     @if (m.vacation) { <span class="after">(<strong>{{ m.work - m.vacation }}</strong> după concediu)</span> }
