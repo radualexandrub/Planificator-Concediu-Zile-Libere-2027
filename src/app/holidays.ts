@@ -4,7 +4,7 @@ export interface Holiday {
   name: string;
 }
 
-// Romanian legal public holidays for 2026.
+// Romanian legal public holidays for 2026
 const HOLIDAYS_2026: Holiday[] = [
   { date: '2026-01-01', name: 'Anul Nou' },
   { date: '2026-01-02', name: 'Anul Nou' },
@@ -25,7 +25,7 @@ const HOLIDAYS_2026: Holiday[] = [
   { date: '2026-12-26', name: 'Crăciunul' },
 ];
 
-// Romanian legal public holidays for 2027.
+// Romanian legal public holidays for 2027
 const HOLIDAYS_2027: Holiday[] = [
   { date: '2027-01-01', name: 'Anul Nou' },
   { date: '2027-01-02', name: 'Anul Nou' },
@@ -46,10 +46,32 @@ const HOLIDAYS_2027: Holiday[] = [
   { date: '2027-12-26', name: 'Crăciunul' },
 ];
 
+// Romanian legal public holidays for 2028
+const HOLIDAYS_2028: Holiday[] = [
+  { date: '2028-01-01', name: 'Anul Nou' },
+  { date: '2028-01-02', name: 'Anul Nou' },
+  { date: '2028-01-06', name: 'Boboteaza' },
+  { date: '2028-01-07', name: 'Sfântul Ioan Botezătorul' },
+  { date: '2028-01-24', name: 'Ziua Unirii Principatelor Române' },
+  { date: '2028-04-14', name: 'Vinerea Mare' },
+  { date: '2028-04-16', name: 'Paștele' },
+  { date: '2028-04-17', name: 'Paștele' },
+  { date: '2028-05-01', name: 'Ziua Muncii' },
+  { date: '2028-06-01', name: 'Ziua Copilului' },
+  { date: '2028-06-04', name: 'Rusaliile' },
+  { date: '2028-06-05', name: 'Rusaliile' },
+  { date: '2028-08-15', name: 'Adormirea Maicii Domnului' },
+  { date: '2028-11-30', name: 'Sfântul Andrei' },
+  { date: '2028-12-01', name: 'Ziua Națională a României' },
+  { date: '2028-12-25', name: 'Crăciunul' },
+  { date: '2028-12-26', name: 'Crăciunul' },
+];
+
 /** Add a year's holidays here to enable its tab, calendar, and saved plan. */
 export const HOLIDAYS_BY_YEAR: Record<number, Holiday[]> = {
   2026: HOLIDAYS_2026,
   2027: HOLIDAYS_2027,
+  2028: HOLIDAYS_2028,
 };
 
 export const YEARS = Object.keys(HOLIDAYS_BY_YEAR).map(Number).sort((a, b) => a - b);
