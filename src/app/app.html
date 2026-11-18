@@ -181,13 +181,61 @@
   </section>
 
   <section class="export">
-    <h2>Salvează local zilele de concediu</h2>
-    <p class="hint">Descarcă zilele de concediu pentru toți anii.</p>
+    <h2>Salvează sau încarcă zile de concediu</h2>
+    <p class="hint">Descarcă sau încarcă zilele de concediu pentru toți anii.</p>
     <div class="actions">
       <button type="button" (click)="exportJson()">Export JSON</button>
       <button type="button" (click)="exportCsv()">Export CSV</button>
+      <button type="button" (click)="openImport()">Import JSON</button>
     </div>
+    @if (importStatus()) {
+      <p class="info" role="status">{{ importStatus() }}</p>
+    }
   </section>
+
+  <dialog #importDialog class="import-dialog" 
+          aria-labelledby="import-title"
+          (click)="onDialogClick($event)">
+    <div class="modal-body">
+      <h2 id="import-title">Import concediu</h2>
+      <form (submit)="$event.preventDefault(); submitImport()">
+        <fieldset>
+          <legend>Alege cum se importă zilele de concediu</legend>
+          <label class="choice">
+            <input type="radio" name="import-mode" 
+                   value="add"
+                   [checked]="importMode() === 'add'" 
+                   (change)="importMode.set('add')">
+            Adaugă la zilele curente de concediu
+          </label>
+          <label class="choice">
+            <input type="radio" name="import-mode" 
+                   value="overwrite"
+                   [checked]="importMode() === 'overwrite'" 
+                   (change)="importMode.set('overwrite')">
+            Suprascrie zilele curente de concediu cu cele din fișier
+          </label>
+          <p class="hint">Anii care nu apar în fișier rămân neschimbați.</p>
+        </fieldset>
+
+        <label class="file-field">
+          Fișier JSON exportat din aplicație
+          <input #importFileInput type="file" 
+                 accept=".json,application/json"
+                 (change)="onImportFile($event)">
+        </label>
+
+        @if (importError()) {
+          <p class="error" role="alert">{{ importError() }}</p>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="secondary" (click)="closeImport()">Anulează</button>
+          <button type="submit" [disabled]="!importFile()">Importă</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 </main>
 
 <app-footer></app-footer>

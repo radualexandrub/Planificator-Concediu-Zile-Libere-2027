@@ -1,5 +1,5 @@
 // src/app/app.ts: Main application component
-import { AfterViewInit, Component, ElementRef, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { HOLIDAYS_BY_YEAR, Holiday, YEARS } from './holidays';
 import { Footer } from './footer';
 
@@ -18,6 +18,15 @@ const DEFAULT_LABEL = 'Concediu';
 const CSV_SEPARATOR = ',';
 const EXPORT_APP_ID = 'zile-libere';
 const EXPORT_VERSION = 1;
+const MAX_IMPORT_BYTES = 1_000_000;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_LABEL_LENGTH = 30;
+
+type ImportMode = 'add' | 'overwrite';
+interface ImportedYear { total: number | null; days: UserDay[]; ignored: number; }
+
+/** Error whose message is safe to show to the user. */
+class ImportError extends Error {}
 
 /** Quotes a CSV field and prevents Excel from interpreting labels as formulas. */
 function csvCell(value: string): string {
@@ -120,6 +129,63 @@ function toRow(iso: string, name: string): Row {
   };
 }
 
+/** Validates one imported year. Invalid entries are dropped and counted. */
+function parseImportedYear(year: number, value: unknown): ImportedYear {
+  const raw = value && typeof value === 'object' && !Array.isArray(value)
+    ? value as { total?: unknown; days?: unknown }
+    : {};
+  const total = typeof raw.total === 'number' && Number.isFinite(raw.total) && raw.total >= 0
+    ? Math.floor(raw.total) : null;
+  const stateDays = STATE_DAYS_BY_YEAR.get(year)!;
+  const days = new Map<string, UserDay>();
+  let ignored = 0;
+
+  for (const entry of Array.isArray(raw.days) ? raw.days : []) {
+    const day = toUserDay(entry);
+    const valid = day !== null
+      && ISO_DATE.test(day.iso)
+      && day.iso.startsWith(`${year}-`)
+      && toIso(parse(day.iso)) === day.iso
+      && !isWeekend(parse(day.iso))
+      && !stateDays.has(day.iso)
+      && !days.has(day.iso);
+    if (valid) days.set(day.iso, { iso: day.iso, label: day.label.slice(0, MAX_LABEL_LENGTH) });
+    else ignored++;
+  }
+  return { total, days: [...days.values()].sort(byIso), ignored };
+}
+
+/** Parses an exported JSON file. Throws an ImportError with a Romanian message. */
+function parseImportFile(text: string): Map<number, ImportedYear> {
+  let value: unknown;
+  try {
+    value = JSON.parse(text.replace(/^\ufeff/, ''));
+  } catch {
+    throw new ImportError('Fișierul nu este un JSON valid.');
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new ImportError('Fișierul nu este un export al acestei aplicații.');
+  }
+  const data = value as { app?: unknown; version?: unknown; years?: unknown };
+  if (data.app !== EXPORT_APP_ID || !data.years || typeof data.years !== 'object' || Array.isArray(data.years)) {
+    throw new ImportError('Fișierul nu este un export al acestei aplicații.');
+  }
+  if (typeof data.version !== 'number' || !Number.isInteger(data.version)
+      || data.version < 1 || data.version > EXPORT_VERSION) {
+    throw new ImportError('Versiunea fișierului nu este suportată.');
+  }
+
+  const years = data.years as Record<string, unknown>;
+  const result = new Map<number, ImportedYear>();
+  for (const year of YEARS) {
+    if (years[year] !== undefined) result.set(year, parseImportedYear(year, years[year]));
+  }
+  if (!result.size) {
+    throw new ImportError(`Fișierul nu conține niciun an suportat (${YEARS.join(', ')}).`);
+  }
+  return result;
+}
+
 @Component({
   selector: 'app-root',
   imports: [Footer],
@@ -142,6 +208,14 @@ export class App implements AfterViewInit {
   readonly end = signal('');
   readonly label = signal('');
   readonly showBackToTop = signal(false);
+
+  private readonly importDialog = viewChild.required<ElementRef<HTMLDialogElement>>('importDialog');
+  private readonly importFileInput = viewChild.required<ElementRef<HTMLInputElement>>('importFileInput');
+
+  readonly importMode = signal<ImportMode>('add');
+  readonly importFile = signal<File | null>(null);
+  readonly importError = signal('');
+  readonly importStatus = signal('');
 
   readonly minDate = computed(() => `${this.year()}-01-01`);
   readonly maxDate = computed(() => `${this.year()}-12-31`);
@@ -438,6 +512,83 @@ export class App implements AfterViewInit {
     link.download = filename;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url));
+  }
+
+  openImport(): void {
+    this.importMode.set('add');
+    this.importFile.set(null);
+    this.importError.set('');
+    this.importStatus.set('');
+    this.importFileInput().nativeElement.value = '';
+    this.importDialog().nativeElement.showModal();
+  }
+
+  closeImport(): void {
+    this.importDialog().nativeElement.close();
+  }
+
+  /** Clicking the backdrop closes the modal. */
+  onDialogClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeImport();
+  }
+
+  onImportFile(event: Event): void {
+    const input = event.target;
+    this.importFile.set(input instanceof HTMLInputElement ? input.files?.[0] ?? null : null);
+    this.importError.set('');
+  }
+
+  async submitImport(): Promise<void> {
+    const file = this.importFile();
+    if (!file) return;
+    this.importError.set('');
+
+    let imported: Map<number, ImportedYear>;
+    try {
+      if (file.size > MAX_IMPORT_BYTES) throw new ImportError('Fișierul este prea mare.');
+      imported = parseImportFile(await file.text());
+    } catch (error) {
+      this.importError.set(error instanceof ImportError ? error.message : 'Fișierul nu a putut fi citit.');
+      return;
+    }
+
+    this.applyImport(imported, this.importMode());
+    this.closeImport();
+  }
+
+  /** Merges or replaces plans for imported years, then reports what happened. */
+  private applyImport(imported: Map<number, ImportedYear>, mode: ImportMode): void {
+    const current = this.plans();
+    const next = { ...current };
+    let count = 0;
+    let ignored = 0;
+
+    for (const [year, data] of imported) {
+      ignored += data.ignored;
+      if (mode === 'overwrite') {
+        next[year] = { total: data.total ?? current[year].total, days: data.days };
+        count += data.days.length;
+      } else {
+        const known = new Set(current[year].days.map(day => day.iso));
+        const fresh = data.days.filter(day => !known.has(day.iso));
+        ignored += data.days.length - fresh.length;
+        count += fresh.length;
+        next[year] = { ...current[year], days: [...current[year].days, ...fresh].sort(byIso) };
+      }
+    }
+    this.plans.set(next);
+
+    const parts = [
+      `Import reușit (${mode === 'add' ? 'adăugare' : 'suprascriere'}). Ani: ${[...imported.keys()].join(', ')}.`,
+      `Zile importate: ${count}.`,
+    ];
+    if (ignored) parts.push(`Ignorate: ${ignored} (weekend, sărbători legale, date invalide sau duplicate).`);
+    for (const year of imported.keys()) {
+      if (next[year].days.length > next[year].total) {
+        parts.push(`Atenție: în ${year} ai depășit totalul de zile de concediu.`);
+      }
+    }
+    this.importStatus.set(parts.join(' '));
   }
 
   /** Keeps the sticky weekday header just below the sticky balance bar, whatever height it has. */
