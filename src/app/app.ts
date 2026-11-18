@@ -15,6 +15,15 @@ const storageKey = (year: number) => 'zile-libere-' + year;
 const YEAR_KEY = 'zile-libere-selected-year';
 const DEFAULT_ALLOWANCE = 21;
 const DEFAULT_LABEL = 'Concediu';
+const CSV_SEPARATOR = ',';
+const EXPORT_APP_ID = 'zile-libere';
+const EXPORT_VERSION = 1;
+
+/** Quotes a CSV field and prevents Excel from interpreting labels as formulas. */
+function csvCell(value: string): string {
+  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
 
 /** date -> holiday name. Holidays on the same date are merged into one entry. 
  * Example: 2026-01-01 -> "Anul Nou" 
@@ -373,6 +382,62 @@ export class App implements AfterViewInit {
 
   backToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /** Downloads every year's allowance and vacation days as one JSON file
+   * Example format: 
+   * {
+   *   "app": "zile-libere",
+   *   "version": 1,
+   *   "exportedAt": "2026-11-17T09:34:17.409Z",
+   *   "years": {
+   *     "2026": {
+   *       "total": 23,
+   *       "days": [
+   *         {
+   *           "iso": "2026-01-05",
+   *           "label": "Craciun"
+   *         },
+   *       ]
+   *     },
+   *   }
+   * }
+   */
+  exportJson(): void {
+    const plans = this.plans();
+    const data = {
+      app: EXPORT_APP_ID,
+      version: EXPORT_VERSION,
+      exportedAt: new Date().toISOString(),
+      years: Object.fromEntries(YEARS.map(year => [year, plans[year]])),
+    };
+    this.download(`radu-concediu-${toIso(new Date())}.json`, JSON.stringify(data, null, 2), 'application/json');
+  }
+
+  /** Downloads every vacation day of every year as one CSV file, 
+   * one row per day. */
+  exportCsv(): void {
+    const plans = this.plans();
+    const lines = [['Data', 'Eticheta'].join(CSV_SEPARATOR)];
+    for (const year of YEARS) {
+      for (const { iso, label } of plans[year].days) {
+        lines.push([iso, label].map(csvCell).join(CSV_SEPARATOR));
+      }
+    }
+    this.download(
+      `radu-concediu-${toIso(new Date())}.csv`,
+      '\ufeff' + lines.join('\r\n'),
+      'text/csv;charset=utf-8',
+    );
+  }
+
+  private download(filename: string, content: string, mime: string): void {
+    const url = URL.createObjectURL(new Blob([content], { type: mime }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url));
   }
 
   /** Keeps the sticky weekday header just below the sticky balance bar, whatever height it has. */

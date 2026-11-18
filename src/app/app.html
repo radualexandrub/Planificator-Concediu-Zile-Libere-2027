@@ -19,8 +19,8 @@
     }
   </nav>
   <p class="summary">
-    În {{ year() }} sunt {{ stateRows().length }} zile libere legale: {{ weekendCount() }} în weekend și
-    <strong>{{ weekdayCount() }} în timpul săptămânii</strong>
+    În {{ year() }} sunt {{ stateRows().length }} zile libere legale: <strong>{{ weekdayCount() }} în timpul săptămânii</strong> 
+    și {{ weekendCount() }} în weekend
   </p>
 
   <section class="planner">
@@ -61,11 +61,19 @@
     <section>
       <h2>Zile libere legale {{ year() }}</h2>
       <table class="list">
-        <thead><tr><th>Data</th><th>Ziua</th><th>Sărbători legale</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Ziua</th>
+            <th>Sărbători legale</th>
+          </tr>
+        </thead>
         <tbody>
           @for (r of stateRows(); track r.iso) {
             <tr [class.weekend]="r.weekend">
-              <td>{{ r.label }}</td><td>{{ r.weekday }}</td><td>{{ r.name }}</td>
+              <td>{{ r.label }}</td>
+              <td>{{ r.weekday }}</td>
+              <td>{{ r.name }}</td>
             </tr>
           }
         </tbody>
@@ -79,7 +87,6 @@
           <thead>
             <tr>
               <th>Data</th>
-              <th>Ziua</th>
               <th>Eticheta</th>
               <th><span class="sr-only">Șterge</span></th>
             </tr>
@@ -87,8 +94,7 @@
           <tbody>
             @for (r of userRows(); track r.iso) {
               <tr>
-                <td>{{ r.label }}</td>
-                <td>{{ r.weekday }}</td>
+                <td>{{ r.label }}, {{ r.weekday }}</td>
                 <td>
                   <input class="user-list-label-input" type="text" maxlength="30" 
                          [value]="r.name"
@@ -172,6 +178,15 @@
         }
       </tbody>
     </table>
+  </section>
+
+  <section class="export">
+    <h2>Salvează local zilele de concediu</h2>
+    <p class="hint">Descarcă zilele de concediu pentru toți anii.</p>
+    <div class="actions">
+      <button type="button" (click)="exportJson()">Export JSON</button>
+      <button type="button" (click)="exportCsv()">Export CSV</button>
+    </div>
   </section>
 </main>
 

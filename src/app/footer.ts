@@ -1,3 +1,4 @@
+/* /src/app/footer.ts with additional functionality to handle accent color changes and theme toggling */
 import { Component, OnInit } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';

@@ -444,6 +444,28 @@ table {
   opacity: 1;
 }
 
+/* Export section */
+.export .hint {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.export .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.export button {
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--user);
+  color: var(--font-opposite-color);
+}
+.export button:hover {
+  filter: brightness(1.15);
+}
+
 @media (min-width: 700px) {
   .cal .remove-day {
     top: 4px;
