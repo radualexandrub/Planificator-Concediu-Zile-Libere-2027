@@ -168,7 +168,13 @@
                     </button>
                   }
                   @if (c.state) { <small>{{ c.state }}</small> }
-                  @else if (c.userLabel) { <small>{{ c.userLabel }}</small> }
+                  @else if (c.userLabel) {
+                    <input class="label-input" type="text" maxlength="30"
+                           [value]="c.userLabel"
+                           [attr.aria-label]="'Eticheta pentru ' + c.day + ' ' + c.monthShort"
+                           (keydown.enter)="$any($event.target).blur()"
+                           (blur)="updateLabel(c.iso, $any($event.target).value)">
+                  }
                   @if (c.first) { <small class="edge">început {{ c.monthShort }}</small> }
                   @if (c.last) { <small class="edge">sfârșit {{ c.monthShort }}</small> }
                 </td>

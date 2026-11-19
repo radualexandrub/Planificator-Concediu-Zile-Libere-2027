@@ -397,6 +397,31 @@ table {
   background: var(--primary);
   color: var(--font-opposite-color);
 }
+/* Editable label of a vacation day
+ * keep the same design like the <small> next to it */
+.cal .label-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0.15rem;
+  padding: 0 0.1rem;
+  border: 0;
+  border-radius: 2px;
+  background: var(--surface-overlay);
+  color: inherit;
+  font: inherit;
+  font-size: 0.56rem;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+/* The global focus outline would be clipped by the cell's overflow: hidden
+ * Offset the outline and draw it beyond the border edge */
+.cal .label-input:focus-visible {
+  outline: 2px solid var(--user);
+  outline-offset: -2px;
+}
 /* One banner per month: name + working days */
 .cal .month-row td {
   height: auto;
@@ -480,6 +505,9 @@ table {
 }
 .modal-body {
   padding: 0.25rem 1.25rem 1.25rem;
+}
+.modal-body form {
+  accent-color: var(--user);
 }
 .import-dialog h2 {
   margin-top: 1rem;
@@ -573,7 +601,8 @@ table {
   .cal th {
     font-size: 0.85rem;
   }
-  .cal small {
+  .cal small,
+  .cal .label-input {
     font-size: 0.7rem;
   }
 }
