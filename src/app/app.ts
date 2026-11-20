@@ -21,6 +21,10 @@ const EXPORT_VERSION = 1;
 const MAX_IMPORT_BYTES = 1_000_000;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_LABEL_LENGTH = 30;
+const SHARE_DAY_PARAM = 'd';
+const SHARE_TOTAL_PARAM = /^t\d{4}$/;
+const SHARE_SEPARATOR = '_';
+const SHARE_URL_WARN_LENGTH = 2000;
 
 type ImportMode = 'add' | 'overwrite';
 interface ImportedYear { total: number | null; days: UserDay[]; ignored: number; }
@@ -186,6 +190,56 @@ function parseImportFile(text: string): Map<number, ImportedYear> {
   return result;
 }
 
+/** Reads shared vacation days from URL params. 
+ * Throws an ImportError when none is usable. */
+function parseShareParams(params: URLSearchParams): Map<number, ImportedYear> {
+  const entries = params.getAll(SHARE_DAY_PARAM).map(value => {
+    const sep = value.indexOf(SHARE_SEPARATOR);
+    return sep < 0
+      ? { iso: value, label: '' }
+      : { iso: value.slice(0, sep), label: value.slice(sep + 1) };
+  });
+
+  const result = new Map<number, ImportedYear>();
+  for (const year of YEARS) {
+    const rawTotal = params.get(`t${year}`);
+    const parsed = parseImportedYear(year, {
+      total: rawTotal?.trim() ? Number(rawTotal) : null,
+      days: entries.filter(entry => entry.iso.startsWith(`${year}-`)),
+    });
+    if (parsed.days.length) result.set(year, parsed);
+  }
+  if (!result.size) throw new ImportError('Linkul nu conține zile de concediu valide.');
+  return result;
+}
+
+/** Builds a shareable link with every year's allowance and vacation days. 
+ * Returns '' when there are no days. */
+function buildShareUrl(plans: Record<number, YearPlan>): string {
+  const params = new URLSearchParams();
+  for (const year of YEARS) {
+    const { total, days } = plans[year];
+    if (!days.length) continue;
+    params.append(`t${year}`, String(total));
+    for (const { iso, label } of days) params.append(SHARE_DAY_PARAM, `${iso}${SHARE_SEPARATOR}${label}`);
+  }
+  if (!params.has(SHARE_DAY_PARAM)) return '';
+
+  const url = new URL(location.href);
+  url.search = params.toString().replace(/\+/g, '%20');
+  url.hash = '';
+  return url.toString();
+}
+
+/** Removes the share link URL params from the address bar so a refresh doesn't open the import again. */
+function stripShareParams(): void {
+  const url = new URL(location.href);
+  for (const key of [...url.searchParams.keys()]) {
+    if (key === SHARE_DAY_PARAM || SHARE_TOTAL_PARAM.test(key)) url.searchParams.delete(key);
+  }
+  history.replaceState(history.state, '', url);
+}
+
 @Component({
   selector: 'app-root',
   imports: [Footer],
@@ -210,12 +264,23 @@ export class App implements AfterViewInit {
   readonly showBackToTop = signal(false);
 
   private readonly importDialog = viewChild.required<ElementRef<HTMLDialogElement>>('importDialog');
-  private readonly importFileInput = viewChild.required<ElementRef<HTMLInputElement>>('importFileInput');
+  private readonly importFileInput = viewChild<ElementRef<HTMLInputElement>>('importFileInput');
 
   readonly importMode = signal<ImportMode>('add');
   readonly importFile = signal<File | null>(null);
   readonly importError = signal('');
   readonly importStatus = signal('');
+  /** Days received from the shared URL. When set, the import modal shows them instead of the file input. */
+  readonly sharedImport = signal<Map<number, ImportedYear> | null>(null);
+  readonly sharedPreview = computed(() => [...(this.sharedImport() ?? [])].map(([year, data]) => ({
+    year,
+    total: data.total,
+    ignored: data.ignored,
+    rows: data.days.map(day => toRow(day.iso, day.label)),
+  })));
+  readonly shareVisible = signal(false);
+  readonly shareStatus = signal('');
+  readonly shareUrl = computed(() => buildShareUrl(this.plans()));
 
   readonly minDate = computed(() => `${this.year()}-01-01`);
   readonly maxDate = computed(() => `${this.year()}-12-31`);
@@ -312,6 +377,7 @@ export class App implements AfterViewInit {
         localStorage.setItem(YEAR_KEY, String(this.year()));
       } catch { /* ignore */ }
     });
+    this.loadSharedFromUrl();
   }
 
   /** Applies a change only to the currently selected year's plan. */
@@ -515,11 +581,13 @@ export class App implements AfterViewInit {
   }
 
   openImport(): void {
+    this.sharedImport.set(null);
     this.importMode.set('add');
     this.importFile.set(null);
     this.importError.set('');
     this.importStatus.set('');
-    this.importFileInput().nativeElement.value = '';
+    const input = this.importFileInput();
+    if (input) input.nativeElement.value = '';
     this.importDialog().nativeElement.showModal();
   }
 
@@ -539,6 +607,13 @@ export class App implements AfterViewInit {
   }
 
   async submitImport(): Promise<void> {
+    const shared = this.sharedImport();
+    if (shared) {
+      this.applyImport(shared, this.importMode());
+      this.closeImport();
+      return;
+    }
+
     const file = this.importFile();
     if (!file) return;
     this.importError.set('');
@@ -591,8 +666,51 @@ export class App implements AfterViewInit {
     this.importStatus.set(parts.join(' '));
   }
 
+  /** On first load: reads shared days from the URL, then cleans the address bar. */
+  private loadSharedFromUrl(): void {
+    const params = new URLSearchParams(location.search);
+    if (!params.has(SHARE_DAY_PARAM)) return;
+    try {
+      this.sharedImport.set(parseShareParams(params));
+    } catch (error) {
+      this.importStatus.set(error instanceof ImportError ? error.message : 'Linkul nu a putut fi citit.');
+    }
+    stripShareParams();
+  }
+
+  /** Opens the import modal for days received from the URL (called once, after the first render). */
+  private openSharedImport(): void {
+    if (this.sharedImport()) this.importDialog().nativeElement.showModal();
+  }
+
+  /** Shows the link and tries to copy it right away. */
+  async generateShareLink(): Promise<void> {
+    this.shareVisible.set(true);
+    if (!this.shareUrl()) {
+      this.shareStatus.set('Nu ai zile de concediu de partajat.');
+      return;
+    }
+    await this.copyShareLink();
+  }
+
+  async copyShareLink(): Promise<void> {
+    const url = this.shareUrl();
+    let message: string;
+    try {
+      await navigator.clipboard.writeText(url);
+      message = 'Linkul a fost copiat în clipboard.';
+    } catch {
+      message = 'Nu am putut copia automat. Click pe link pentru a-l selecta, apoi copiază-l manual.';
+    }
+    if (url.length > SHARE_URL_WARN_LENGTH) {
+      message += ` Atenție: linkul are ${url.length} de caractere și unele aplicații îl pot tăia.`;
+    }
+    this.shareStatus.set(message);
+  }
+
   /** Keeps the sticky weekday header just below the sticky balance bar, whatever height it has. */
   ngAfterViewInit(): void {
+    this.openSharedImport();
     const bar = this.host.nativeElement.querySelector<HTMLElement>('.balance-bar');
     if (!bar || typeof ResizeObserver === 'undefined') return;
     new ResizeObserver(() => this.host.nativeElement.style.setProperty('--bar-h', bar.offsetHeight + 'px')).observe(bar);

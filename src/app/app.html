@@ -199,37 +199,64 @@
     }
   </section>
 
-  <dialog #importDialog class="import-dialog" 
-          aria-labelledby="import-title"
+  <section class="export share">
+    <h2>Partajare prin link</h2>
+    <p class="hint">Generează un link cu toate zilele de concediu salvate și deschide-l pe alt dispozitiv pentru a le importa.</p>
+    <div class="actions">
+      <button type="button" (click)="generateShareLink()">Generează link</button>
+      @if (shareVisible() && shareUrl()) {
+        <button type="button" (click)="copyShareLink()">Copiază linkul</button>
+      }
+    </div>
+    @if (shareVisible() && shareUrl()) {
+      <code class="share-url" tabindex="0" aria-label="Link de partajare">{{ shareUrl() }}</code>
+    }
+    @if (shareStatus()) {
+      <p class="info" role="status">{{ shareStatus() }}</p>
+    }
+  </section>
+
+  <dialog #importDialog class="import-dialog" aria-labelledby="import-title"
           (click)="onDialogClick($event)">
     <div class="modal-body">
-      <h2 id="import-title">Import concediu</h2>
+      <h2 id="import-title">{{ sharedImport() ? 'Import din link' : 'Import concediu' }}</h2>
       <form (submit)="$event.preventDefault(); submitImport()">
         <fieldset>
           <legend>Alege cum se importă zilele de concediu</legend>
           <label class="choice">
-            <input type="radio" name="import-mode" 
-                   value="add"
-                   [checked]="importMode() === 'add'" 
-                   (change)="importMode.set('add')">
-            Adaugă la zilele curente de concediu
+            <input type="radio" name="import-mode" value="add"
+                   [checked]="importMode() === 'add'" (change)="importMode.set('add')">
+            Adaugă la lista curentă
           </label>
           <label class="choice">
-            <input type="radio" name="import-mode" 
-                   value="overwrite"
-                   [checked]="importMode() === 'overwrite'" 
-                   (change)="importMode.set('overwrite')">
-            Suprascrie zilele curente de concediu cu cele din fișier
+            <input type="radio" name="import-mode" value="overwrite"
+                   [checked]="importMode() === 'overwrite'" (change)="importMode.set('overwrite')">
+            Suprascrie lista curentă
           </label>
-          <p class="hint">Anii care nu apar în fișier rămân neschimbați.</p>
+          <p class="hint">Anii care nu apar în {{ sharedImport() ? 'link' : 'fișier' }} rămân neschimbați.</p>
         </fieldset>
 
-        <label class="file-field">
-          Fișier JSON exportat din aplicație
-          <input #importFileInput type="file" 
-                 accept=".json,application/json"
-                 (change)="onImportFile($event)">
-        </label>
+        @if (sharedImport()) {
+          <div class="shared-preview" tabindex="0" aria-label="Zilele primite prin link">
+            @for (y of sharedPreview(); track y.year) {
+              <h3>{{ y.year }}: {{ y.rows.length }} {{ y.rows.length === 1 ? 'zi' : 'zile' }}@if (y.total !== null) { (total concediu: {{ y.total }}) }</h3>
+              <ul>
+                @for (r of y.rows; track r.iso) {
+                  <li><span>{{ r.label }}, {{ r.weekday }}</span><span>{{ r.name }}</span></li>
+                }
+              </ul>
+              @if (y.ignored) {
+                <p class="hint">{{ y.ignored }} intrări ignorate (weekend, sărbători legale sau date invalide).</p>
+              }
+            }
+          </div>
+        } @else {
+          <label class="file-field">
+            Fișier JSON exportat din aplicație
+            <input #importFileInput type="file" accept=".json,application/json"
+                   (change)="onImportFile($event)">
+          </label>
+        }
 
         @if (importError()) {
           <p class="error" role="alert">{{ importError() }}</p>
@@ -237,7 +264,7 @@
 
         <div class="modal-actions">
           <button type="button" class="secondary" (click)="closeImport()">Anulează</button>
-          <button type="submit" [disabled]="!importFile()">Importă</button>
+          <button type="submit" [disabled]="!sharedImport() && !importFile()">Importă</button>
         </div>
       </form>
     </div>

@@ -31,7 +31,8 @@ node -v
   - Months alternate between two slightly different backgrounds, and the first and last day of each month carry a small label.
   - Each month starts with a banner showing its number of working days (for example "21 din 31"), plus the number left after your leave.
   - The weekday header stays pinned while you scroll, and the month buttons scroll smoothly to their month.
-- **Saved in your browser**: your leave days and allowance are stored in `localStorage`, so they survive a page refresh. Nothing is sent anywhere.
+- **Saved in your browser**: your leave days and allowance are stored in `localStorage`, so they survive a page refresh. Planner data is not sent to a service/server.
+- **Share by link**: generate a URL containing saved leave days and each affected year's allowance, then open it on another device to review and import. Import requires confirmation and supports adding or overwriting.
 - **Fully static and responsive**: works on desktop and mobile, with no hosted services.
 
 <br/>
@@ -60,6 +61,28 @@ The production build is written to `dist/zile-libere/browser`. It uses a relativ
 
 <br/>
 
+## Automation tests
+
+Playwright NPM was installed via `npm install --save-dev @playwright/test`.
+
+The Playwright end-to-end tests cover invalid share links, preview and add import, overwrite import, and link generation for multiple years. 
+
+Install the browser once
+
+```bash
+npx playwright install chromium
+```
+
+then run:
+
+```bash
+npm run test:e2e
+```
+
+Playwright starts the Angular development server automatically when it is not already running.
+
+<br/>
+
 ## Deploying to GitHub Pages
 
 A workflow is included in `.github/workflows/deploy.yml`. It installs dependencies with Node 24, builds the app and publishes the output.
@@ -81,6 +104,9 @@ src/
     app.ts            State and logic (signals)
     app.html          Template
     app.css           Component styles
+playwright.config.ts  Playwright configuration
+tests/
+  share-link.spec.ts  Share-link end-to-end tests
 .github/workflows/
   deploy.yml          GitHub Pages deployment
 ```
